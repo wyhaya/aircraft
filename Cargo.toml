@@ -1,0 +1,12 @@
+
+[package]
+name = "aircraft"
+version = "0.0.0"
+edition = "2018"
+
+[profile.dev]
+debug = false
+
+[dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy" }
+fastrand = "1.4.0"
