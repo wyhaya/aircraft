@@ -1,7 +1,7 @@
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
+use bevy::math::const_vec2;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
-use std::time::Duration;
 
 const WINDOW_WIDTH: f32 = 640.;
 const WINDOW_HEIGHT: f32 = 1000.;
@@ -26,7 +26,7 @@ fn main() {
         .add_resource(BulletCreateTimer(Timer::from_seconds(0.1, true)))
         .add_system(bullet_move)
         .add_system(obstacle_create)
-        .add_resource(ObstacleCreateTimer(Timer::from_seconds(0., true)))
+        .add_resource(ObstacleCreateTimer(Timer::from_seconds(0.1, true)))
         .add_system(obstacle_move)
         .run();
 }
@@ -51,9 +51,7 @@ struct Aircraft {
 impl Aircraft {
     const WIDTH: f32 = 67.2;
     const HEIGHT: f32 = 80.0;
-    fn vec2() -> Vec2 {
-        Vec2::new(Self::WIDTH, Self::HEIGHT)
-    }
+    const SIZE: Vec2 = const_vec2!([Self::WIDTH, Self::HEIGHT]);
 }
 
 struct Bullet {
@@ -63,9 +61,7 @@ struct Bullet {
 impl Bullet {
     const WIDTH: f32 = 16.25;
     const HEIGHT: f32 = 40.0;
-    fn vec2() -> Vec2 {
-        Vec2::new(Self::WIDTH, Self::HEIGHT)
-    }
+    const SIZE: Vec2 = const_vec2!([Self::WIDTH, Self::HEIGHT]);
 }
 
 struct BulletCreateTimer(Timer);
@@ -75,10 +71,9 @@ struct Obstacle {
 }
 
 impl Obstacle {
-    const SIZE: f32 = 60.;
-    fn vec2() -> Vec2 {
-        Vec2::splat(Self::SIZE)
-    }
+    const WIDTH: f32 = 60.;
+    const HEIGHT: f32 = 60.;
+    const SIZE: Vec2 = const_vec2!([Self::WIDTH, Self::HEIGHT]);
 }
 
 struct ObstacleCreateTimer(Timer);
@@ -157,7 +152,7 @@ fn setup(
         .spawn(SpriteBundle {
             material: materials.add(aircraft.into()),
             transform: Transform::from_translation(Vec3::new(0., aircraft_y, 0.)),
-            sprite: Sprite::new(Aircraft::vec2()),
+            sprite: Sprite::new(Aircraft::SIZE),
             ..Default::default()
         })
         .with(Aircraft { speed: 500. })
@@ -221,28 +216,27 @@ fn bullet_create(
     materials: Res<Materials>,
     audio: Res<Audio>,
     sounds: Res<Sounds>,
-    mut query: Query<&mut Transform, With<Aircraft>>,
+    query: Query<&Transform, With<Aircraft>>,
 ) {
     timer.0.tick(time.delta_seconds());
     if !timer.0.finished() {
         return;
     }
     if input.pressed(KeyCode::A) {
-        for transform in query.iter_mut() {
-            commands
-                .spawn(SpriteBundle {
-                    material: materials.bullet.clone(),
-                    sprite: Sprite::new(Bullet::vec2()),
-                    transform: Transform::from_translation(Vec3::new(
-                        transform.translation.x,
-                        transform.translation.y,
-                        0.,
-                    )),
-                    ..Default::default()
-                })
-                .with(Bullet { speed: 540. });
-            audio.play(sounds.shot.clone());
-        }
+        let transform = query.iter().next().unwrap();
+        commands
+            .spawn(SpriteBundle {
+                material: materials.bullet.clone(),
+                sprite: Sprite::new(Bullet::SIZE),
+                transform: Transform::from_translation(Vec3::new(
+                    transform.translation.x,
+                    transform.translation.y,
+                    0.,
+                )),
+                ..Default::default()
+            })
+            .with(Bullet { speed: 540. });
+        audio.play(sounds.shot.clone());
     }
 }
 
@@ -272,15 +266,15 @@ fn obstacle_create(
     }
     timer.0.set_duration(fastrand::f32() * 3.);
 
-    let y = WINDOW_HEIGHT / 2.0 + Obstacle::SIZE / 2.0;
-    let mut x = fastrand::f32() * (WINDOW_WIDTH / 2. - Obstacle::SIZE / 2.);
+    let y = WINDOW_HEIGHT / 2.0 + Obstacle::HEIGHT / 2.0;
+    let mut x = fastrand::f32() * (WINDOW_WIDTH / 2. - Obstacle::WIDTH / 2.);
     if fastrand::bool() {
         x = -x;
     }
     commands
         .spawn(SpriteBundle {
             material: materials.obstacle.clone(),
-            sprite: Sprite::new(Obstacle::vec2()),
+            sprite: Sprite::new(Obstacle::SIZE),
             transform: Transform::from_translation(Vec3::new(x, y, 0.)),
             ..Default::default()
         })
@@ -300,8 +294,7 @@ fn obstacle_move(
     mut score_query: Query<&mut Score>,
 ) {
     let aircraft_position = aircraft_query.iter().next().unwrap().translation;
-    let aircraft_size = Aircraft::vec2();
-    let min = -(WINDOW_HEIGHT / 2. + Obstacle::SIZE / 2.0);
+    let min = -(WINDOW_HEIGHT / 2. + Obstacle::HEIGHT / 2.0);
 
     'obstacle: for (obstacle_entity, obstacle, mut transform) in obstacle_query.iter_mut() {
         transform.translation.y -= time.delta_seconds() * obstacle.speed;
@@ -313,12 +306,12 @@ fn obstacle_move(
         }
 
         // Obstacle and aircraft collision
-        let (obstacle_position, obstacle_size) = (transform.translation, Obstacle::vec2());
+        let obstacle_position = transform.translation;
         if collide(
             aircraft_position,
-            aircraft_size,
+            Aircraft::SIZE,
             obstacle_position,
-            obstacle_size,
+            Obstacle::SIZE,
         )
         .is_some()
         {
@@ -329,12 +322,11 @@ fn obstacle_move(
 
         // Obstacle and bullet collision
         for (bullet_entiry, transform) in bullet_query.iter() {
-            let (bullet_position, bullet_size) = (transform.translation, Bullet::vec2());
             if collide(
                 obstacle_position,
-                obstacle_size,
-                bullet_position,
-                bullet_size,
+                Obstacle::SIZE,
+                transform.translation,
+                Bullet::SIZE,
             )
             .is_some()
             {
