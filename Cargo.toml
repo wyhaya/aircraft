@@ -7,6 +7,9 @@ edition = "2018"
 [profile.dev]
 debug = false
 
+[features]
+default = ["bevy/dynamic"]
+
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy" }
 fastrand = "1.4.0"

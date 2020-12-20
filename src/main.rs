@@ -10,24 +10,24 @@ fn main() {
     App::build()
         .add_resource(WindowDescriptor {
             title: env!("CARGO_PKG_NAME").to_string(),
-            width: WINDOW_WIDTH as u32,
-            height: WINDOW_HEIGHT as u32,
+            width: WINDOW_WIDTH,
+            height: WINDOW_HEIGHT,
             resizable: false,
             ..Default::default()
         })
         .add_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_startup_system(setup)
-        .add_system(fps_update)
-        .add_system(score_update)
-        .add_system(aircraft_move)
-        .add_system(bullet_create)
+        .add_startup_system(setup.system())
+        .add_system(fps_update.system())
+        .add_system(score_update.system())
+        .add_system(aircraft_move.system())
+        .add_system(bullet_create.system())
         .add_resource(BulletCreateTimer(Timer::from_seconds(0.1, true)))
-        .add_system(bullet_move)
-        .add_system(obstacle_create)
+        .add_system(bullet_move.system())
+        .add_system(obstacle_create.system())
         .add_resource(ObstacleCreateTimer(Timer::from_seconds(0.1, true)))
-        .add_system(obstacle_move)
+        .add_system(obstacle_move.system())
         .run();
 }
 
