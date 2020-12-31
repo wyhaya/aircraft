@@ -11,5 +11,5 @@ debug = false
 default = ["bevy/dynamic"]
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy" }
+bevy = "0.4.0"
 fastrand = "1.4.0"
