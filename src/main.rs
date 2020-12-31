@@ -1,10 +1,13 @@
+mod background;
+
+use background::BackgroundPlugin;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::math::const_vec2;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 
-const WINDOW_WIDTH: f32 = 640.;
-const WINDOW_HEIGHT: f32 = 1000.;
+pub const WINDOW_WIDTH: f32 = 640.;
+pub const WINDOW_HEIGHT: f32 = 1000.;
 
 fn main() {
     App::build()
@@ -15,9 +18,9 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
-        .add_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(BackgroundPlugin)
         .add_startup_system(setup.system())
         .add_system(fps_update.system())
         .add_system(score_update.system())
