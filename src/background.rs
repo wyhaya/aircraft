@@ -11,7 +11,7 @@ impl Background {
     const HEIGHT: f32 = WINDOW_WIDTH;
 }
 
-const BOTTOM: f32 = (WINDOW_HEIGHT - Background::HEIGHT) / 2.;
+const BOTTOM: f32 = -((WINDOW_HEIGHT - Background::HEIGHT) / 2.);
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut AppBuilder) {
@@ -28,7 +28,7 @@ fn setup(
     let background = asset_server.load("images/background.png");
     commands.spawn(Camera2dBundle::default());
     for i in 0..3 {
-        let y = i as f32 * Background::WIDTH - BOTTOM;
+        let y = i as f32 * Background::WIDTH + BOTTOM;
         commands
             .spawn(SpriteBundle {
                 material: materials.add(background.clone().into()),
@@ -43,9 +43,9 @@ fn setup(
 fn update(time: Res<Time>, mut query: Query<&mut Transform, With<Background>>) {
     for mut transform in query.iter_mut() {
         transform.translation.y -= time.delta_seconds() * Background::SPEED;
-        if transform.translation.y < -BOTTOM + -Background::HEIGHT {
-            dbg!(transform.translation.y);
-            transform.translation.y = -BOTTOM + Background::HEIGHT * 2.;
+        if transform.translation.y < BOTTOM - Background::HEIGHT {
+            let d = BOTTOM - Background::HEIGHT - transform.translation.y;
+            transform.translation.y = BOTTOM + Background::HEIGHT * 2. - d;
         }
     }
 }

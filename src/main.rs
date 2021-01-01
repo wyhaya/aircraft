@@ -89,6 +89,8 @@ struct Materials {
 struct Sounds {
     shot: Handle<AudioSource>,
     explosion: Handle<AudioSource>,
+    injured: Handle<AudioSource>,
+    death: Handle<AudioSource>,
 }
 
 fn setup(
@@ -162,6 +164,8 @@ fn setup(
         .insert_resource(Sounds {
             shot: asset_server.load("sounds/shot.mp3"),
             explosion: asset_server.load("sounds/explosion.mp3"),
+            injured: asset_server.load("sounds/injured.mp3"),
+            death: asset_server.load("sounds/death.mp3"),
         })
         .insert_resource(Materials {
             obstacle: materials.add(obstacle.into()),
@@ -320,6 +324,7 @@ fn obstacle_move(
         {
             score_query.iter_mut().next().unwrap().collision();
             commands.despawn(obstacle_entity);
+            audio.play(sounds.injured.clone());
             continue 'obstacle;
         }
 
