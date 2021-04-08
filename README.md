@@ -23,4 +23,4 @@ cargo run
 
 ## Screenshot
 
-![preview](https://user-images.githubusercontent.com/23690145/113968689-2765c800-9866-11eb-9fe0-04556bff121a.png)
+<img src="https://user-images.githubusercontent.com/23690145/113968689-2765c800-9866-11eb-9fe0-04556bff121a.png" title="preview" width="50%" />
