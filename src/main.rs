@@ -1,18 +1,18 @@
 mod aircraft;
 mod background;
-mod bullet;
 mod fps;
 mod obstacle;
 mod score;
+mod shot;
 
 use aircraft::{Aircraft, AircraftPlugin};
 use background::BackgroundPlugin;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
-use bullet::{Bullet, BulletPlugin};
 use fps::FpsPlugin;
 use obstacle::{Obstacle, ObstaclePlugin};
 use score::{Score, ScorePlugin};
+use shot::{Bubble, Bullet, ShotPlugin};
 
 pub const WINDOW_WIDTH: f32 = 640.;
 pub const WINDOW_HEIGHT: f32 = 1000.;
@@ -32,7 +32,7 @@ fn main() {
         .add_plugin(ScorePlugin)
         .add_plugin(BackgroundPlugin)
         .add_plugin(AircraftPlugin)
-        .add_plugin(BulletPlugin)
+        .add_plugin(ShotPlugin)
         .add_plugin(ObstaclePlugin)
         .add_startup_system(setup.system())
         .add_system(update.system())
@@ -61,7 +61,7 @@ fn update(
     mut score_query: Query<&mut Score>,
     aircraft_query: Query<&Transform, With<Aircraft>>,
     obstacle_query: Query<(Entity, &Transform), With<Obstacle>>,
-    bullet_query: Query<(Entity, &Transform), With<Bullet>>,
+    shot_query: Query<(Entity, &Transform), Or<(With<Bullet>, With<Bubble>)>>,
 ) {
     let mut score = score_query.single_mut().unwrap();
     let aircraft_position = aircraft_query.single().unwrap().translation;
@@ -84,7 +84,7 @@ fn update(
         }
 
         // Obstacle and bullet collision
-        for (bullet_entiry, transform) in bullet_query.iter() {
+        for (bullet_entiry, transform) in shot_query.iter() {
             if collide(
                 obstacle_position,
                 Obstacle::SIZE,
