@@ -19,7 +19,7 @@ cargo run
 
 ### Shoot
 
-<kbd>A</kbd>
+<kbd>A</kbd> <kbd>S</kbd>
 
 ## Screenshot
 
