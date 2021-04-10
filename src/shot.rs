@@ -16,6 +16,8 @@ impl Bullet {
     pub const SIZE: Vec2 = const_vec2!([Self::WIDTH, Self::HEIGHT]);
 }
 
+struct BubbleTimer(Timer);
+
 pub struct Bubble {
     speed: Vec3,
 }
@@ -37,7 +39,8 @@ struct MaterialResource {
 impl Plugin for ShotPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(setup.system())
-            .insert_resource(BulletTimer(Timer::from_seconds(0.1, true)))
+            .insert_resource(BulletTimer(Timer::from_seconds(0.2, false)))
+            .insert_resource(BubbleTimer(Timer::from_seconds(0.6, false)))
             .add_system(bullet_create.system())
             .add_system(bullet_move.system())
             .add_system(bubble_create.system())
@@ -74,10 +77,8 @@ fn bullet_create(
     query: Query<&Transform, With<Aircraft>>,
 ) {
     timer.0.tick(time.delta());
-    if !timer.0.finished() {
-        return;
-    }
-    if input.pressed(KeyCode::A) {
+    if timer.0.finished() && input.pressed(KeyCode::A) {
+        timer.0.reset();
         let transform = query.single().unwrap();
         commands
             .spawn_bundle(SpriteBundle {
@@ -111,21 +112,23 @@ fn bullet_move(
 
 fn bubble_create(
     mut commands: Commands,
+    time: Res<Time>,
+    mut timer: ResMut<BubbleTimer>,
     input: Res<Input<KeyCode>>,
     material_res: Res<MaterialResource>,
     query: Query<&Transform, With<Aircraft>>,
 ) {
-    if input.pressed(KeyCode::S) {
+    timer.0.tick(time.delta());
+    if timer.0.finished() && input.pressed(KeyCode::S) {
+        timer.0.reset();
         let transform = query.single().unwrap();
-
         let i = fastrand::usize(0..material_res.bubble.len());
         let mut x = fastrand::f32();
         if fastrand::bool() {
             x = -x;
         }
         let y = fastrand::f32();
-        let d = fastrand::i32(50..200) as f32;
-
+        let s = fastrand::i32(50..200) as f32;
         commands
             .spawn_bundle(SpriteBundle {
                 material: material_res.bubble[i].clone(),
@@ -138,7 +141,7 @@ fn bubble_create(
                 ..Default::default()
             })
             .insert(Bubble {
-                speed: d * Vec3::new(x, y, 0.0).normalize(),
+                speed: s * Vec3::new(x, y, 0.0).normalize(),
             });
     }
 }
